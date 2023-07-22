@@ -27,7 +27,7 @@ exports.createUser = async (req, res) => {
         data: updatedUser,
       });
     } else {
-      const newpassword = await encryptPassword(req.body.password);
+      req.body.password = await encryptPassword(req.body.password);
       const user = await new User(req.body).save();
       return res.status(200).json({
         success: true,
