@@ -38,7 +38,8 @@ const UserSchema = new mongoose.Schema({
     password:{
         required:true,
         minlength:[6,"Password must be 6 characters"],
-        type:String
+        type:String,
+        select:false
     },
     isDeleted:{
         type:Boolean,

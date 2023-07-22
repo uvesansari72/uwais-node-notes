@@ -1,5 +1,8 @@
 const User = require("../model/UserModel");
-const encryptPassword = require("../utils/encryptPassword");
+const {
+  encryptPassword,
+  comparePassword,
+} = require("../utils/encryptPassword");
 
 exports.createUser = async (req, res) => {
   try {
@@ -24,7 +27,7 @@ exports.createUser = async (req, res) => {
         data: updatedUser,
       });
     } else {
-      req.body.password = await encryptPassword(req.body.password)
+      const newpassword = await encryptPassword(req.body.password);
       const user = await new User(req.body).save();
       return res.status(200).json({
         success: true,
@@ -37,6 +40,53 @@ exports.createUser = async (req, res) => {
       success: false,
       message: error.message,
       data: {},
+    });
+  }
+};
+
+exports.loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!(email && password)) {
+      return res.status(400).json({
+        success: true,
+        message: "Enter email id and password",
+        data: {},
+      });
+    }
+    const user = await User.findOne({ email }).select("+password");
+
+    /* Bydefault password select is false. becuase we did password select false in User model\
+     If we did multiple field false. and if we want mutilple field then write .select("+password +gender")
+    */
+
+    if (!user) {
+      return res.status(404).json({
+        success: true,
+        message: "Invalid email or password",
+        data: {},
+      });
+    }
+
+    if (await comparePassword(password, user.password)) {
+      return res.status(200).json({
+        success: true,
+        message: "Login successfully",
+        data: user,
+      });
+    } else {
+      return res.status(404).json({
+        success: true,
+        message: "Invalid email or password",
+        data: {},
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+      data: [],
     });
   }
 };
@@ -104,7 +154,7 @@ exports.deleteUser = async (req, res) => {
         data: {},
       });
     }
-    
+
     const user = await User.findByIdAndUpdate(
       { _id: req.params.id },
       { $set: { isDeleted: 1 } }
