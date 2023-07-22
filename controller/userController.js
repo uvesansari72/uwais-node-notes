@@ -4,6 +4,7 @@ const {
   comparePassword,
 } = require("../utils/encryptPassword");
 
+const { genrateJWT } = require("../utils/jwt");
 exports.createUser = async (req, res) => {
   try {
     if (!req.body) {
@@ -70,10 +71,23 @@ exports.loginUser = async (req, res) => {
     }
 
     if (await comparePassword(password, user.password)) {
+      const payload = {
+        user_id: user._id,
+      };
+
+      const token = genrateJWT(
+        payload,
+        process.env.JWT_SECRET,
+        process.env.JWT_EXPIRE
+      );
+
       return res.status(200).json({
         success: true,
         message: "Login successfully",
-        data: user,
+        /* data:user : We have write ...user._doc in below line becuase when we simply return user then it will give bydefault doc object
+        but when we write {...user} then it will give hidden objected also. that's why we have written {data._doc}
+        */
+        data: { ...user._doc, token },
       });
     } else {
       return res.status(404).json({
