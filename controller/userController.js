@@ -1,4 +1,5 @@
 const User = require("../model/UserModel");
+const encryptPassword = require("../utils/encryptPassword");
 
 exports.createUser = async (req, res) => {
   try {
@@ -23,6 +24,7 @@ exports.createUser = async (req, res) => {
         data: updatedUser,
       });
     } else {
+      req.body.password = await encryptPassword(req.body.password)
       const user = await new User(req.body).save();
       return res.status(200).json({
         success: true,
